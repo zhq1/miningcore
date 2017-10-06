@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
@@ -70,27 +71,24 @@ namespace MiningCore.Stratum
                 // host it and its message loop in a dedicated background thread
                 var task = new Task(() =>
                 {
-                    var loop = new Loop();
+                    var tcpListener = new TcpListener(endpoint);
+                    tcpListener.Start();
 
-                    var listener = loop
-                        .CreateTcp()
-                        .SimultaneousAccepts(true)
-                        .KeepAlive(true, 1)
-                        .NoDelay(true)
-                        .Listen(endpoint, (con, ex) =>
-                        {
-                            if (ex == null)
-                                OnClientConnected(con, endpoint, loop);
-                            else
-                                logger.Error(() => $"[{LogCat}] Connection error state: {ex.Message}");
-                        });
-
-                    lock (ports)
+                    while (true)
                     {
-                        ports[endpoint.Port] = listener;
-                    }
+                        try
+                        {
+                            var client = tcpListener.AcceptTcpClient();
+                            client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
 
-                    loop.RunDefault();
+                            OnClientConnected(client, endpoint);
+                        }
+
+                        catch (Exception ex)
+                        {
+                            logger.Error(ex);
+                        }
+                    }
                 }, TaskCreationOptions.LongRunning);
 
                 task.Start();
@@ -118,11 +116,11 @@ namespace MiningCore.Stratum
             }
         }
 
-        private void OnClientConnected(Tcp con, IPEndPoint endpointConfig, Loop loop)
+        private void OnClientConnected(TcpClient con, IPEndPoint endpointConfig)
         {
             try
             {
-                var remoteEndPoint = con.GetPeerEndPoint();
+                var remoteEndPoint = (IPEndPoint) con.Client.RemoteEndPoint;
 
                 // get rid of banned clients as early as possible
                 if (banManager?.IsBanned(remoteEndPoint.Address) == true)
@@ -137,7 +135,7 @@ namespace MiningCore.Stratum
 
                 // setup client
                 var client = new StratumClient<TClientContext>();
-                client.Init(loop, con, ctx, endpointConfig, connectionId);
+                client.Init(con, ctx, endpointConfig, connectionId);
 
                 // request subscription
                 var sub = client.Requests
@@ -169,16 +167,9 @@ namespace MiningCore.Stratum
                     .Subscribe(_ => { }, ex => OnReceiveError(client, ex), () => OnReceiveComplete(client));
 
                 // ensure subscription is disposed on loop thread
-                var disposer = loop.CreateAsync((handle) =>
-                {
-                    sub.Dispose();
-
-                    handle.Dispose();
-                });
-
                 client.Subscription = Disposable.Create(() =>
                 {
-                    disposer.Send();
+                    sub.Dispose();
                 });
 
                 // register client

@@ -22,10 +22,12 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Net;
+using System.Net.Sockets;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using NetUV.Core.Buffers;
 using NetUV.Core.Handles;
 using Newtonsoft.Json;
@@ -56,74 +58,79 @@ namespace MiningCore.JsonRpc
         private readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
         private readonly JsonSerializerSettings serializerSettings;
-        private Tcp upstream;
-        private Loop loop;
+        private TcpClient upstream;
         private const int MaxRequestLength = 8192;
 
         #region Implementation of IJsonRpcConnection
 
-        public void Init(Loop loop, Tcp tcp, string connectionId)
+        public void Init(TcpClient tcp, string connectionId)
         {
             Contract.RequiresNonNull(tcp, nameof(tcp));
 
-            this.loop = loop;
             upstream = tcp;
             ConnectionId = connectionId;
 
             var incomingLines = Observable.Create<string>(observer =>
             {
-                var sb = new StringBuilder();
+                var exit = false;
 
-                this.upstream.OnRead((handle, buffer) =>
+                Task.Factory.StartNew(() =>
                 {
-                    // onAccept
-                    var data = buffer.ReadString(Encoding.UTF8);
+                    var stm = tcp.GetStream();
+                    var buf = new byte[1024];
+                    var sb = new StringBuilder();
 
-                    if (!string.IsNullOrEmpty(data))
+                    // message loop
+                    while (!exit)
                     {
-                        // flood-prevention check
-                        if (sb.Length + data.Length < MaxRequestLength)
+                        try
                         {
-                            sb.Append(data);
+                            var cb = stm.Read(buf, 0, buf.Length);
 
-                            // scan for lines and emit
-                            int index;
-                            while (sb.Length > 0 && (index = sb.ToString().IndexOf('\n')) != -1)
+                            if(cb > 0)
                             {
-                                var line = sb.ToString(0, index).Trim();
-                                sb.Remove(0, index + 1);
+                                var data = Encoding.UTF8.GetString(buf, 0, cb);
 
-                                if (line.Length > 0)
-                                    observer.OnNext(line);
+                                if (!string.IsNullOrEmpty(data))
+                                {
+                                    // flood-prevention check
+                                    if (sb.Length + data.Length < MaxRequestLength)
+                                    {
+                                        sb.Append(data);
+
+                                        // scan for lines and emit
+                                        int index;
+                                        while (sb.Length > 0 && (index = sb.ToString().IndexOf('\n')) != -1)
+                                        {
+                                            var line = sb.ToString(0, index).Trim();
+                                            sb.Remove(0, index + 1);
+
+                                            if (line.Length > 0)
+                                                observer.OnNext(line);
+                                        }
+                                    }
+
+                                    else
+                                    {
+                                        observer.OnError(new InvalidDataException($"[{ConnectionId}] Incoming message exceeds maximum length of {MaxRequestLength}"));
+                                    }
+                                }
                             }
                         }
 
-                        else
+                        catch (Exception ex)
                         {
-                            observer.OnError(new InvalidDataException($"[{ConnectionId}] Incoming message exceeds maximum length of {MaxRequestLength}"));
+                            break;
                         }
                     }
-                }, (handle, ex) =>
-                {
-                    // onError
-                    observer.OnError(ex);
-                }, handle =>
-                {
-                    // onCompleted
-                    observer.OnCompleted();
 
-                    if (upstream.IsValid)
-                        upstream.CloseHandle();
-                });
+                    observer.OnCompleted();
+                }, TaskCreationOptions.LongRunning);
 
                 return Disposable.Create(() =>
                 {
-                    if (upstream.IsValid)
-                    {
-                        logger.Debug(() => $"[{ConnectionId}] Last subscriber disconnected from receiver stream");
-
-                        upstream.Shutdown();
-                    }
+                    exit = true;
+                    tcp.Close();
                 });
             });
 
@@ -152,7 +159,7 @@ namespace MiningCore.JsonRpc
             SendInternal(Encoding.UTF8.GetBytes(json + '\n'));
         }
 
-        public IPEndPoint RemoteEndPoint => upstream?.GetPeerEndPoint();
+        public IPEndPoint RemoteEndPoint => (IPEndPoint) upstream?.Client.RemoteEndPoint;
         public string ConnectionId { get; private set; }
 
         #endregion
@@ -161,17 +168,7 @@ namespace MiningCore.JsonRpc
         {
             Contract.RequiresNonNull(data, nameof(data));
 
-            var marshaller = loop.CreateAsync(handle =>
-            {
-                if (upstream.IsValid && !upstream.IsClosing && upstream.IsWritable)
-                {
-                    upstream.QueueWrite(data);
-                }
-
-                handle.Dispose();
-            });
-
-            marshaller.Send();
+            upstream.Client.Send(data);
         }
     }
 }

@@ -20,6 +20,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Net;
+using System.Net.Sockets;
 using System.Reactive;
 using Autofac;
 using MiningCore.JsonRpc;
@@ -34,16 +35,16 @@ namespace MiningCore.Stratum
 
         #region API-Surface
 
-        public void Init(Loop loop, Tcp uvCon, IComponentContext ctx, IPEndPoint endpointConfig, string connectionId)
+        public void Init(TcpClient con, IComponentContext ctx, IPEndPoint endpointConfig, string connectionId)
         {
-            Contract.RequiresNonNull(uvCon, nameof(uvCon));
+            Contract.RequiresNonNull(con, nameof(con));
             Contract.RequiresNonNull(ctx, nameof(ctx));
             Contract.RequiresNonNull(endpointConfig, nameof(endpointConfig));
 
             PoolEndpoint = endpointConfig;
 
             rpcCon = ctx.Resolve<JsonRpcConnection>();
-            rpcCon.Init(loop, uvCon, connectionId);
+            rpcCon.Init(con, connectionId);
 
             RemoteEndpoint = rpcCon.RemoteEndPoint;
             Requests = rpcCon.Received;

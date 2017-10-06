@@ -118,7 +118,7 @@ namespace MiningCore.JsonRpc
                             }
                         }
 
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                             break;
                         }
@@ -130,7 +130,11 @@ namespace MiningCore.JsonRpc
                 return Disposable.Create(() =>
                 {
                     exit = true;
-                    tcp.Close();
+
+                    lock (upstream)
+                    {
+                        upstream.Close();
+                    }
                 });
             });
 
@@ -170,7 +174,10 @@ namespace MiningCore.JsonRpc
 
             try
             {
-                upstream.Client.Send(data);
+                lock (upstream)
+                {
+                    upstream.Client.Send(data);
+                }
             }
 
             catch (SocketException )

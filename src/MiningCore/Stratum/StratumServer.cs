@@ -79,7 +79,6 @@ namespace MiningCore.Stratum
                         try
                         {
                             var client = tcpListener.AcceptTcpClient();
-                            client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
 
                             OnClientConnected(client, endpoint);
                         }

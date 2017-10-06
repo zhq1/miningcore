@@ -168,7 +168,18 @@ namespace MiningCore.JsonRpc
         {
             Contract.RequiresNonNull(data, nameof(data));
 
-            upstream.Client.Send(data);
+            try
+            {
+                upstream.Client.Send(data);
+            }
+
+            catch (SocketException )
+            {
+            }
+
+            catch (ObjectDisposedException)
+            {
+            }
         }
     }
 }

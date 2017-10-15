@@ -122,37 +122,37 @@ namespace MiningCore.Mining
                 // wire updates
                 lock (context.VarDiff)
                 {
-                    context.VarDiff.Subscription = Shares
-                        .Where(x=> x.Item1 == client)
-                        .Timestamp()
-                        .Select(x => x.Timestamp.ToUnixTimeMilliseconds())
-                        .Buffer(TimeSpan.FromSeconds(poolEndpoint.VarDiff.RetargetTime), VarDiffSampleCount)
-                        .Subscribe(timestamps =>
-                        {
-                            try
-                            {
-                                VarDiffManager varDiffManager;
+                    //context.VarDiff.Subscription = Shares
+                    //    .Where(x=> x.Item1 == client)
+                    //    .Timestamp()
+                    //    .Select(x => x.Timestamp.ToUnixTimeMilliseconds())
+                    //    .Buffer(TimeSpan.FromSeconds(poolEndpoint.VarDiff.RetargetTime), VarDiffSampleCount)
+                    //    .Subscribe(timestamps =>
+                    //    {
+                    //        try
+                    //        {
+                    //            VarDiffManager varDiffManager;
 
-                                lock (varDiffManagers)
-                                {
-                                    varDiffManager = varDiffManagers[poolEndpoint];
-                                }
+                    //            lock (varDiffManagers)
+                    //            {
+                    //                varDiffManager = varDiffManagers[poolEndpoint];
+                    //            }
 
-                                var newDiff = varDiffManager.Update(context, timestamps, client.ConnectionId, logger);
+                    //            var newDiff = varDiffManager.Update(context, timestamps, client.ConnectionId, logger);
 
-                                if (newDiff.HasValue)
-                                {
-                                    logger.Info(() => $"[{LogCat}] [{client.ConnectionId}] VarDiff update to {newDiff}");
+                    //            if (newDiff.HasValue)
+                    //            {
+                    //                logger.Info(() => $"[{LogCat}] [{client.ConnectionId}] VarDiff update to {newDiff}");
 
-                                    OnVarDiffUpdate(client, newDiff.Value);
-                                }
-                            }
+                    //                OnVarDiffUpdate(client, newDiff.Value);
+                    //            }
+                    //        }
 
-                            catch (Exception ex)
-                            {
-                                logger.Error(ex);
-                            }
-                        });
+                    //        catch (Exception ex)
+                    //        {
+                    //            logger.Error(ex);
+                    //        }
+                    //    });
                 }
             }
 

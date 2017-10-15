@@ -118,6 +118,16 @@ namespace MiningCore.Blockchain.Monero
 
         public MoneroShare ProcessShare(string nonce, uint workerExtraNonce, string workerHash, StratumClient<MoneroWorkerContext> worker)
         {
+            var result2 = new MoneroShare
+            {
+                BlockHeight = BlockTemplate.Height,
+                IsBlockCandidate = false,
+                BlobHex = "3343",
+                BlobHash = "3343",
+            };
+
+            return result2;
+
             Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(nonce), $"{nameof(nonce)} must not be empty");
             Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(workerHash), $"{nameof(workerHash)} must not be empty");
             Contract.Requires<ArgumentException>(extraNonce != 0, $"{nameof(extraNonce)} must not be empty");

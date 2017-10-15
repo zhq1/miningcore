@@ -85,6 +85,9 @@ namespace MiningCore.Blockchain.Monero
                 {
                     var isNew = currentJob == null || currentJob.BlockTemplate.Height < blockTemplate.Height;
 
+                    if (currentJob != null)
+                        return false;
+
                     if (isNew)
                     {
                         currentJob = new MoneroJob(blockTemplate, instanceId, NextJobId(), poolConfig, clusterConfig);

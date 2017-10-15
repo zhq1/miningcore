@@ -296,7 +296,7 @@ namespace MiningCore.Payments
 
         public void AttachPool(IMiningPool pool)
         {
-            pool.Shares.Subscribe(x => { queue.Add(x.Item2); });
+            //pool.Shares.Subscribe(x => { queue.Add(x.Item2); });
         }
 
         public void Start(ClusterConfig clusterConfig)
@@ -322,7 +322,7 @@ namespace MiningCore.Payments
             queueSub = queue.GetConsumingEnumerable()
                 .ToObservable(TaskPoolScheduler.Default)
                 .Do(_ => CheckQueueBacklog())
-                .Buffer(TimeSpan.FromSeconds(1), 20)
+                .Buffer(TimeSpan.FromSeconds(1), 100)
                 .Where(shares => shares.Any())
                 .Subscribe(shares =>
                 {

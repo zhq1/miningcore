@@ -189,8 +189,8 @@ namespace MiningCore.Blockchain.Monero
                 var submitRequest = request.ParamsAs<MoneroSubmitShareRequest>();
 
                 // validate worker
-                if (client.ConnectionId != submitRequest?.WorkerId || !client.Context.IsAuthorized)
-                    throw new StratumException(StratumError.MinusOne, "unauthorized");
+                //if (client.ConnectionId != submitRequest?.WorkerId || !client.Context.IsAuthorized)
+                //    throw new StratumException(StratumError.MinusOne, "unauthorized");
 
                 // recognize activity
                 client.Context.LastActivity = DateTime.UtcNow;
@@ -206,16 +206,16 @@ namespace MiningCore.Blockchain.Monero
                         throw new StratumException(StratumError.MinusOne, "invalid jobid");
                 }
 
-                // dupe check
-                var nonceLower = submitRequest.Nonce.ToLower();
+                //// dupe check
+                //var nonceLower = submitRequest.Nonce.ToLower();
 
-                lock (job)
-                {
-                    if (job.Submissions.Contains(nonceLower))
-                        throw new StratumException(StratumError.MinusOne, "duplicate share");
+                //lock (job)
+                //{
+                //    if (job.Submissions.Contains(nonceLower))
+                //        throw new StratumException(StratumError.MinusOne, "duplicate share");
 
-                    job.Submissions.Add(nonceLower);
-                }
+                //    job.Submissions.Add(nonceLower);
+                //}
 
                 var poolEndpoint = poolConfig.Ports[client.PoolEndpoint.Port];
 
@@ -334,7 +334,6 @@ namespace MiningCore.Blockchain.Monero
 
             disposables.Add(Shares
                 .Buffer(TimeSpan.FromSeconds(poolHashRateSampleIntervalSeconds))
-                .Do(shares => UpdateMinerHashrates(shares, poolHashRateSampleIntervalSeconds))
                 .Select(shares =>
                 {
                     if (!shares.Any())
@@ -342,6 +341,8 @@ namespace MiningCore.Blockchain.Monero
 
                     try
                     {
+                        UpdateMinerHashrates(shares, poolHashRateSampleIntervalSeconds);
+                        
                         return HashrateFromShares(shares, poolHashRateSampleIntervalSeconds);
                     }
 
@@ -370,8 +371,8 @@ namespace MiningCore.Blockchain.Monero
                 client.Context.ApplyPendingDifficulty();
 
                 // re-send job
-                var job = CreateWorkerJob(client);
-                client.Notify(MoneroStratumMethods.JobNotify, job);
+                //var job = CreateWorkerJob(client);
+                //client.Notify(MoneroStratumMethods.JobNotify, job);
             }
         }
 

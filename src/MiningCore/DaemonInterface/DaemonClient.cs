@@ -375,13 +375,22 @@ namespace MiningCore.DaemonInterface
         private DaemonResponse<JToken>[] MapDaemonBatchResponse(int i, Task<JsonRpcResponse<JToken>[]> x)
         {
             if (x.IsFaulted)
+            {
                 return x.Result?.Select(y => new DaemonResponse<JToken>
                 {
                     Instance = endPoints[i],
                     Error = new JsonRpcException(-500, x.Exception.Message, null)
                 }).ToArray();
+            }
 
-            Debug.Assert(x.IsCompletedSuccessfully);
+            else if (x.IsCanceled)
+            {
+                return x.Result?.Select(y => new DaemonResponse<JToken>
+                {
+                    Instance = endPoints[i],
+                    Error = new JsonRpcException(-500, "Cancelled", null)
+                }).ToArray();
+            }
 
             return x.Result?.Select(y => new DaemonResponse<JToken>
             {

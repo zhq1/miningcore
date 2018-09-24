@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright 2017 Coin Foundry (coinfoundry.org)
 Authors: Oliver Weichhold (oliver@weichhold.com)
 
@@ -33,6 +33,12 @@ namespace MiningCore.Native
 
         [DllImport("libmultihash", EntryPoint = "x11_export", CallingConvention = CallingConvention.Cdecl)]
         public static extern int x11(byte* input, byte* output, uint inputLength);
+
+        [DllImport("libmultihash", EntryPoint = "x13_export", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int x13(byte* input, byte* output, uint inputLength);
+
+        [DllImport("libmultihash", EntryPoint = "x13_bcd_export", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int x13_bcd(byte* input, byte* output);
 
         [DllImport("libmultihash", EntryPoint = "x15_export", CallingConvention = CallingConvention.Cdecl)]
         public static extern int x15(byte* input, byte* output, uint inputLength);
@@ -126,8 +132,7 @@ namespace MiningCore.Native
         [StructLayout(LayoutKind.Sequential)]
         public struct ethash_h256_t
         {
-            [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.U8, SizeConst = 32)]
-            public byte[] value;
+            [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.U8, SizeConst = 32)] public byte[] value;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -136,8 +141,7 @@ namespace MiningCore.Native
             public ethash_h256_t result;
             public ethash_h256_t mix_hash;
 
-            [MarshalAs(UnmanagedType.U1)]
-            public bool success;
+            [MarshalAs(UnmanagedType.U1)] public bool success;
         }
 
         public delegate int ethash_callback_t(uint progress);

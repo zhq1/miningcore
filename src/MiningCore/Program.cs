@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright 2017 Coin Foundry (coinfoundry.org)
 Authors: Oliver Weichhold (oliver@weichhold.com)
 
@@ -44,7 +44,6 @@ using MiningCore.Crypto.Hashing.Algorithms;
 using MiningCore.Crypto.Hashing.Equihash;
 using MiningCore.Extensions;
 using MiningCore.Mining;
-using MiningCore.Native;
 using MiningCore.Notifications;
 using MiningCore.Payments;
 using MiningCore.Persistence.Dummy;
@@ -121,7 +120,7 @@ namespace MiningCore
                     RecoverShares(shareRecoveryOption.Value());
             }
 
-            catch (PoolStartupAbortException ex)
+            catch(PoolStartupAbortException ex)
             {
                 if (!string.IsNullOrEmpty(ex.Message))
                     Console.WriteLine(ex.Message);
@@ -129,17 +128,17 @@ namespace MiningCore
                 Console.WriteLine("\nCluster cannot start. Good Bye!");
             }
 
-            catch (JsonException)
+            catch(JsonException)
             {
                 // ignored
             }
 
-            catch (IOException)
+            catch(IOException)
             {
                 // ignored
             }
 
-            catch (AggregateException ex)
+            catch(AggregateException ex)
             {
                 if (!(ex.InnerExceptions.First() is PoolStartupAbortException))
                     Console.WriteLine(ex);
@@ -147,12 +146,12 @@ namespace MiningCore
                 Console.WriteLine("Cluster cannot start. Good Bye!");
             }
 
-            catch (OperationCanceledException)
+            catch(OperationCanceledException)
             {
                 // Ctrl+C
             }
 
-            catch (Exception ex)
+            catch(Exception ex)
             {
                 Console.WriteLine(ex);
 
@@ -172,7 +171,7 @@ namespace MiningCore
         private static void ValidateConfig()
         {
             // set some defaults
-            foreach (var config in clusterConfig.Pools)
+            foreach(var config in clusterConfig.Pools)
             {
                 if (!config.EnableInternalStratum.HasValue)
                     config.EnableInternalStratum = config.ExternalStratums == null || config.ExternalStratums.Length == 0;
@@ -183,7 +182,7 @@ namespace MiningCore
                 clusterConfig.Validate();
             }
 
-            catch (ValidationException ex)
+            catch(ValidationException ex)
             {
                 Console.WriteLine($"Configuration is not valid:\n\n{string.Join("\n", ex.Errors.Select(x => "=> " + x.ErrorMessage))}");
                 throw new PoolStartupAbortException(string.Empty);
@@ -272,28 +271,28 @@ namespace MiningCore
                     ContractResolver = new CamelCasePropertyNamesContractResolver()
                 });
 
-                using (var reader = new StreamReader(file, Encoding.UTF8))
+                using(var reader = new StreamReader(file, Encoding.UTF8))
                 {
-                    using (var jsonReader = new JsonTextReader(reader))
+                    using(var jsonReader = new JsonTextReader(reader))
                     {
                         return serializer.Deserialize<ClusterConfig>(jsonReader);
                     }
                 }
             }
 
-            catch (JsonSerializationException ex)
+            catch(JsonSerializationException ex)
             {
                 HumanizeJsonParseException(ex);
                 throw;
             }
 
-            catch (JsonException ex)
+            catch(JsonException ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
                 throw;
             }
 
-            catch (IOException ex)
+            catch(IOException ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
                 throw;
@@ -337,7 +336,7 @@ namespace MiningCore
             {
                 var sw = new Stopwatch();
 
-                while (true)
+                while(true)
                 {
                     var s = GC.WaitForFullGCApproach();
                     if (s == GCNotificationStatus.Succeeded)
@@ -466,7 +465,7 @@ namespace MiningCore
 
                 if (config.PerPoolLogFile)
                 {
-                    foreach (var poolConfig in clusterConfig.Pools)
+                    foreach(var poolConfig in clusterConfig.Pools)
                     {
                         var target = new FileTarget(poolConfig.Id)
                         {
@@ -683,7 +682,7 @@ namespace MiningCore
             logger.Info(() => "Shutdown ...");
             Console.WriteLine("Shutdown...");
 
-            foreach (var pool in pools.Values)
+            foreach(var pool in pools.Values)
                 pool.Stop();
 
             shareRelay?.Stop();
@@ -693,8 +692,6 @@ namespace MiningCore
 
         private static void TouchNativeLibs()
         {
-            Console.WriteLine(LibCryptonote.CryptonightHashSlow(Encoding.UTF8.GetBytes("test"), 0).ToHexString());
-            Console.WriteLine(LibCryptonote.CryptonightHashFast(Encoding.UTF8.GetBytes("test")).ToHexString());
             Console.WriteLine(new Blake().Digest(Encoding.UTF8.GetBytes("test"), 0).ToHexString());
         }
 
@@ -704,7 +701,9 @@ namespace MiningCore
         private static readonly string[] NativeLibs =
         {
             "libmultihash.dll",
-            "libcryptonote.dll"
+            "libcryptonote.dll",
+            "libcryptonight.dll",
+            "libzmq.dll",
         };
 
         /// <summary>
@@ -722,7 +721,7 @@ namespace MiningCore
             var runtime = Environment.Is64BitProcess ? "win-x64" : "win-86";
             var appRoot = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
-            foreach (var nativeLib in NativeLibs)
+            foreach(var nativeLib in NativeLibs)
             {
                 var path = Path.Combine(appRoot, "runtimes", runtime, "native", nativeLib);
                 var result = LoadLibraryEx(path, IntPtr.Zero, 0);

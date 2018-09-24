@@ -32,27 +32,25 @@ This is going to change in the future.
 Coin | Implemented | Tested | Planned | Notes
 :--- | :---: | :---: | :---: | :---:
 Bitcoin | Yes | Yes | |
+Bitcoin Cash | Yes | Yes | |
+Bitcoin Gold | Yes | Yes | |
+Bitcoin Diamond | Yes | Yes | |
+Bitcoin Private | Yes | Yes | |
 Litecoin | Yes | Yes | |
 Zcash | Yes | Yes | |
 Monero | Yes | Yes | |
 Ethereum | Yes | Yes | | Requires [Parity](https://github.com/paritytech/parity/releases)
 Ethereum Classic | Yes | Yes | | Requires [Parity](https://github.com/paritytech/parity/releases)
-Expanse | Yes | Yes | | - **Not working for Byzantinium update**<br>- Requires [Parity](https://github.com/paritytech/parity/releases)
 DASH | Yes | Yes | |
-Bitcoin Gold | Yes | Yes | |
-Bitcoin Cash | Yes | Yes | |
 Vertcoin | Yes | Yes | |
 Monacoin | Yes | Yes | |
-Globaltoken | Yes | Yes | | Requires [GLT Daemon](https://globaltoken.org/#downloads)
-Ellaism | Yes | Yes | | Requires [Parity](https://github.com/paritytech/parity/releases)
 Groestlcoin | Yes | Yes | |
 Dogecoin | Yes | No | |
 DigiByte | Yes | Yes | |
 Namecoin | Yes | No | |
 Viacoin | Yes | No | |
 Peercoin | Yes | No | |
-Straks | Yes | Yes | |
-Electroneum | Yes | Yes | |
+Ravencoin | Yes | Yes | |
 MoonCoin | Yes | Yes | |
 
 #### Ethereum
@@ -85,9 +83,11 @@ This software comes with a built-in donation of 0.1% per block-reward to support
 
 ### Runtime Requirements
 
-- [.Net Core 2.0 Runtime](https://www.microsoft.com/net/download/core#/runtime)
+- [.Net Core 2.1 Runtime](https://www.microsoft.com/net/download/core#/runtime)
 - [PostgreSQL Database](https://www.postgresql.org/)
+- On Linux you also need to install the libzmq package for your platform (Ubuntu/Debian: libzmq5, CentOS epel: zeromq)
 - Coin Daemon (per pool)
+- To build and run on Linux refer to the section below
 
 ### PostgreSQL Database setup
 
@@ -129,13 +129,17 @@ You also need to expose all stratum ports specified in your configuration file.
 
 ### Building from Source (Shell)
 
-Install the [.Net Core 2.0 SDK](https://www.microsoft.com/net/download/core) for your platform
+Install the [.Net Core 2.1 SDK](https://www.microsoft.com/net/download/core) for your platform
 
-#### Linux (Ubuntu example)
+#### Linux (Ubuntu 16.04 example)
 
 ```console
-$ apt-get update -y 
-$ apt-get -y install git cmake build-essential libssl-dev pkg-config libboost-all-dev libsodium-dev
+$ wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
+$ sudo dpkg -i packages-microsoft-prod.deb
+$ sudo apt-get update -y
+$ sudo apt-get install apt-transport-https -y
+$ sudo apt-get update -y
+$ sudo apt-get -y install dotnet-sdk-2.1 git cmake build-essential libssl-dev pkg-config libboost-all-dev libsodium-dev libzmq5
 $ git clone https://github.com/coinfoundry/miningcore
 $ cd miningcore/src/MiningCore
 $ ./linux-build.sh

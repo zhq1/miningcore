@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using MiningCore.Configuration;
 using MiningCore.Contracts;
@@ -35,6 +35,7 @@ namespace MiningCore.Blockchain.Bitcoin
         private static readonly IHashAlgorithm sha256D = new Sha256D();
         private static readonly IHashAlgorithm sha256DReverse = new DigestReverser(sha256D);
         private static readonly IHashAlgorithm x11 = new X11();
+        private static readonly IHashAlgorithm x13bcd = new X13BCD();
         private static readonly IHashAlgorithm blake2s = new Blake2s();
         private static readonly IHashAlgorithm x17 = new X17();
         private static readonly IHashAlgorithm x16r = new X16R();
@@ -65,6 +66,9 @@ namespace MiningCore.Blockchain.Bitcoin
 
         private static readonly BitcoinCoinProperties x11Coin =
             new BitcoinCoinProperties(1, sha256D, x11, new DigestReverser(x11), "X11");
+
+        private static readonly BitcoinCoinProperties x13bcdCoin =
+            new BitcoinCoinProperties(1, sha256D, x13bcd, sha256DReverse, "X13-BCD");
 
         private static readonly BitcoinCoinProperties skeinCoin =
             new BitcoinCoinProperties(1, sha256D, skein, sha256DReverse, "Skein");
@@ -105,48 +109,51 @@ namespace MiningCore.Blockchain.Bitcoin
         private static readonly Dictionary<CoinType, BitcoinCoinProperties> coinProperties = new Dictionary<CoinType, BitcoinCoinProperties>
         {
             // SHA256
-            {CoinType.BTC, sha256Coin},
-            {CoinType.BCH, sha256Coin},
-            {CoinType.NMC, sha256Coin},
-            {CoinType.PPC, sha256Coin},
-            {CoinType.GLT, sha256Coin},
+            { CoinType.BTC, sha256Coin },
+            { CoinType.BCH, sha256Coin },
+            { CoinType.NMC, sha256Coin },
+            { CoinType.PPC, sha256Coin },
+            { CoinType.GLT, sha256Coin },
 
             // Scrypt
-            {CoinType.LTC, scryptCoin},
-            {CoinType.DOGE, scryptCoin},
-            {CoinType.VIA, scryptCoin},
-            {CoinType.MOON, scryptCoin},
-            {CoinType.FLO, scryptCoin},
-            {CoinType.PAK, scryptCoin},
+            { CoinType.LTC, scryptCoin },
+            { CoinType.DOGE, scryptCoin },
+            { CoinType.VIA, scryptCoin },
+            { CoinType.MOON, scryptCoin },
+            { CoinType.FLO, scryptCoin },
+            { CoinType.PAK, scryptCoin },
 
             // Groestl
-            {CoinType.GRS, groestlCoin},
+            { CoinType.GRS, groestlCoin },
 
             // Lyra2Rev2 - Variant A
-            {CoinType.MONA, lyra2Rev2CoinVariantA},
-            {CoinType.VTC, lyra2Rev2CoinVariantA},
+            { CoinType.MONA, lyra2Rev2CoinVariantA },
+            { CoinType.VTC, lyra2Rev2CoinVariantA },
 
             // Lyra2Rev2 - Variant B
-            {CoinType.STAK, lyra2Rev2CoinVariantB},
+            { CoinType.STAK, lyra2Rev2CoinVariantB },
 
             // X11
-            {CoinType.DASH, x11Coin},
-            {CoinType.CANN, x11Coin},
+            { CoinType.DASH, x11Coin },
+            { CoinType.CANN, x11Coin },
+
+            // X13
+            { CoinType.BCD, x13bcdCoin },
 
             // Equihash
-            {CoinType.ZEC, equihashCoin},
-            {CoinType.BTG, equihashCoin},
-            {CoinType.ZCL, equihashCoin},
-            {CoinType.ZEN, equihashCoin},
-            {CoinType.BTCP, equihashCoin},
+            { CoinType.ZEC, equihashCoin },
+            { CoinType.BTG, equihashCoin },
+            { CoinType.ZCL, equihashCoin },
+            { CoinType.ZEN, equihashCoin },
+            { CoinType.BTCP, equihashCoin },
 
             // Neoscrypt
-            {CoinType.GBX, neoScryptCoin},
-            {CoinType.CRC, neoScryptCoin},
+            { CoinType.GBX, neoScryptCoin },
+            { CoinType.CRC, neoScryptCoin },
 
             // X16
-            {CoinType.RVN, x16rCoin},
-            {CoinType.PGN, x16sCoin},
+            { CoinType.RVN, x16rCoin },
+            { CoinType.PGN, x16sCoin },
         };
 
         public static BitcoinCoinProperties GetCoinProperties(CoinType coin, string algorithm = null)
@@ -164,7 +171,7 @@ namespace MiningCore.Blockchain.Bitcoin
         {
             Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(algorithm), $"{nameof(algorithm)} must not be empty");
 
-            switch (algorithm.ToLower())
+            switch(algorithm.ToLower())
             {
                 case "sha256d":
                 case "sha256":
@@ -189,7 +196,7 @@ namespace MiningCore.Blockchain.Bitcoin
         {
             Contract.Requires<ArgumentException>(!string.IsNullOrEmpty(algorithm), $"{nameof(algorithm)} must not be empty");
 
-            switch (algorithm.ToLower())
+            switch(algorithm.ToLower())
             {
                 case "lyra":
                     return vergeLyraCoin;

@@ -25,10 +25,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "x11.h"
 #include "groestl.h"
 #include "blake.h"
-#include "blake2s.h"
 #include "fugue.h"
+#include "geek.h"
 #include "qubit.h"
 #include "s3.h"
+#include "verthash/tiny_sha3/sha3.h"
 #include "hefty1.h"
 #include "shavite3.h"
 #include "x13.h"
@@ -36,6 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "nist5.h"
 #include "x15.h"
 #include "x17.h"
+#include "x22i.h"
 #include "fresh.h"
 #include "dcrypt.h"
 #include "jh.h"
@@ -44,12 +46,22 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "Lyra2.h"
 #include "x16r.h"
 #include "x16s.h"
+#include "x16rv2.h"
+#include "x21s.h"
+#include "sha256csm.h"
+#include "sha512_256.h"
+#include "sha256dt.h"
+#include "hmq17.h"
+#include "phi.h"
+#include "verthash/h2.h"
 #include "equi/equihashverify.h"
-#include "libethash/sha3.h"
-#include "libethash/internal.h"
-#include "libethash/ethash.h"
+#include "heavyhash/heavyhash.h"
 
-extern "C" bool ethash_get_default_dirname(char* strbuf, size_t buffsize);
+#ifdef _WIN32
+#include "blake2/ref/blake2.h"
+#else
+#include "blake2/sse/blake2.h"
+#endif
 
 #ifdef _WIN32
 #define MODULE_API __declspec(dllexport)
@@ -65,6 +77,31 @@ extern "C" MODULE_API void scrypt_export(const char* input, char* output, uint32
 extern "C" MODULE_API void quark_export(const char* input, char* output, uint32_t input_len)
 {
 	quark_hash(input, output, input_len);
+}
+
+extern "C" MODULE_API void sha256csm_export(const char* input, char* output, uint32_t input_len)
+{
+    sha256csm_hash(input, output, input_len);
+}
+
+extern "C" MODULE_API void sha3_256_export(const char* input, char* output, uint32_t input_len)
+{
+    sha3(input, input_len, output, 32);
+}
+
+extern "C" MODULE_API void sha3_512_export(const char* input, char* output, uint32_t input_len)
+{
+    sha3(input, input_len, output, 64);
+}
+
+extern "C" MODULE_API void hmq17_export(const char* input, char* output, uint32_t input_len)
+{
+    hmq17_hash(input, output, input_len);
+}
+
+extern "C" MODULE_API void phi_export(const char* input, char* output, uint32_t input_len)
+{
+    phi_hash(input, output, input_len);
 }
 
 extern "C" MODULE_API void x11_export(const char* input, char* output, uint32_t input_len)
@@ -134,9 +171,14 @@ extern "C" MODULE_API void blake_export(const char* input, char* output, uint32_
 	blake_hash(input, output, input_len);
 }
 
-extern "C" MODULE_API void blake2s_export(const char* input, char* output, uint32_t input_len)
+extern "C" MODULE_API void blake2s_export(const char* input, char* output, uint32_t input_len, uint32_t output_len)
 {
-    blake2s_hash(input, output, input_len);
+    blake2s(output, output_len == -1 ? BLAKE2S_OUTBYTES : output_len, input, input_len, NULL, 0);
+}
+
+extern "C" MODULE_API void blake2b_export(const char* input, char* output, uint32_t input_len, uint32_t output_len)
+{
+    blake2b(output, output_len == -1 ? BLAKE2B_OUTBYTES : output_len, input, input_len, NULL, 0);
 }
 
 extern "C" MODULE_API void dcrypt_export(const char* input, char* output, uint32_t input_len)
@@ -147,6 +189,11 @@ extern "C" MODULE_API void dcrypt_export(const char* input, char* output, uint32
 extern "C" MODULE_API void fugue_export(const char* input, char* output, uint32_t input_len)
 {
 	fugue_hash(input, output, input_len);
+}
+
+extern "C" MODULE_API void geek_export(const char* input, char* output, uint32_t input_len)
+{
+	geek_hash(input, output, input_len);
 }
 
 extern "C" MODULE_API void qubit_export(const char* input, char* output, uint32_t input_len)
@@ -199,9 +246,49 @@ extern "C" MODULE_API void lyra2rev2_export(const char* input, char* output)
 	lyra2re2_hash(input, output);
 }
 
+extern "C" MODULE_API void lyra2rev3_export(const char* input, char* output)
+{
+	lyra2re3_hash(input, output);
+}
+
 extern "C" MODULE_API void x16r_export(const char* input, char* output, uint32_t input_len)
 {
     x16r_hash(input, output, input_len);
+}
+
+extern "C" MODULE_API void x16rv2_export(const char* input, char* output, uint32_t input_len)
+{
+    x16rv2_hash(input, output, input_len);
+}
+
+extern "C" MODULE_API void x21s_export(const char* input, char* output, uint32_t input_len)
+{
+	x21s_hash(input, output, input_len);
+}
+
+extern "C" MODULE_API void x22i_export(const char* input, char* output, uint32_t input_len)
+{
+    x22i_hash(input, output, input_len);
+}
+
+extern "C" MODULE_API void sha512_256_export(const unsigned char* input, unsigned char* output, uint32_t input_len)
+{
+    sha512_256(input, input_len, output);
+}
+
+extern "C" MODULE_API void sha256dt_export(const char* input, char* output)
+{
+    sha256dt_hash(input, output);
+}
+
+extern "C" MODULE_API int verthash_init_export(const char* filename, int createIfMissing)
+{
+    return verthash_init(filename, createIfMissing);
+}
+
+extern "C" MODULE_API int verthash_export(const unsigned char* input, unsigned char* output, uint32_t input_len)
+{
+    return verthash(input, input_len, output);
 }
 
 extern "C" MODULE_API void x16s_export(const char* input, char* output, uint32_t input_len)
@@ -209,104 +296,40 @@ extern "C" MODULE_API void x16s_export(const char* input, char* output, uint32_t
     x16s_hash(input, output, input_len);
 }
 
-extern "C" MODULE_API bool equihash_verify_export(const char* header, int header_length, const char* solution, int solution_length)
+extern "C" MODULE_API void heavyhash_export(const char* input, char* output, uint32_t input_len)
+{
+    heavyhash_hash(input, output, input_len);
+}
+
+extern "C" MODULE_API bool equihash_verify_200_9_export(const char* header, int header_length, const char* solution, int solution_length, const char *personalization)
 {
     if (header_length != 140) {
         return false;
     }
 
-    std::vector<unsigned char> vecSolution(solution, solution + solution_length);
+    const std::vector<unsigned char> vecSolution(solution, solution + solution_length);
 
-    return verifyEH_200_9(header, vecSolution, NULL);
+    return verifyEH_200_9(header, vecSolution, personalization);
 }
 
-extern "C" MODULE_API bool equihash_verify_btg_export(const char* header, int header_length, const char* solution, int solution_length)
+extern "C" MODULE_API bool equihash_verify_144_5_export(const char* header, int header_length, const char* solution, int solution_length, const char *personalization)
 {
     if (header_length != 140) {
         return false;
     }
 
-    std::vector<unsigned char> vecSolution(solution, solution + solution_length);
+    const std::vector<unsigned char> vecSolution(solution, solution + solution_length);
 
-    return verifyEH_144_5(header, vecSolution, "BgoldPoW");
+    return verifyEH_144_5(header, vecSolution, personalization);
 }
 
-extern "C" MODULE_API void sha3_256_export(const char* input, char* output, uint32_t input_len)
+extern "C" MODULE_API bool equihash_verify_96_5_export(const char* header, int header_length, const char* solution, int solution_length, const char *personalization)
 {
-	SHA3_256((ethash_h256 const*) output, (uint8_t const*) input, input_len);
-}
+    if (header_length != 140) {
+        return false;
+    }
 
-extern "C" MODULE_API void sha3_512_export(const char* input, char* output, uint32_t input_len)
-{
-	SHA3_512((uint8_t*) output, (uint8_t const*)input, input_len);
-}
+    const std::vector<unsigned char> vecSolution(solution, solution + solution_length);
 
-extern "C" MODULE_API uint64_t ethash_get_datasize_export(uint64_t const block_number)
-{
-	return ethash_get_datasize(block_number);
-}
-
-extern "C" MODULE_API uint64_t ethash_get_cachesize_export(uint64_t const block_number)
-{
-	return ethash_get_cachesize(block_number);
-}
-
-extern "C" MODULE_API ethash_light_t ethash_light_new_export(uint64_t block_number)
-{
-	return ethash_light_new(block_number);
-}
-
-extern "C" MODULE_API void ethash_light_delete_export(ethash_light_t light)
-{
-	ethash_light_delete(light);
-}
-
-extern "C" MODULE_API void ethash_light_compute_export(
-	ethash_light_t light,
-	ethash_h256_t const *header_hash,
-	uint64_t nonce,
-	ethash_return_value_t *result)
-{
-	*result = ethash_light_compute(light, *header_hash, nonce);
-}
-
-extern "C" MODULE_API ethash_full_t ethash_full_new_export(const char *dirname, ethash_light_t light, ethash_callback_t callback)
-{
-	uint64_t full_size = ethash_get_datasize(light->block_number);
-	ethash_h256_t seedhash = ethash_get_seedhash(light->block_number);
-	return ethash_full_new_internal(dirname, seedhash, full_size, light, callback);
-}
-
-extern "C" MODULE_API void ethash_full_delete_export(ethash_full_t full)
-{
-	ethash_full_delete(full);
-}
-
-extern "C" MODULE_API void ethash_full_compute_export(
-	ethash_full_t full,
-	ethash_h256_t const *header_hash,
-	uint64_t nonce,
-	ethash_return_value_t *result)
-{
-	*result = ethash_full_compute(full, *header_hash, nonce);
-}
-
-extern "C" MODULE_API void const* ethash_full_dag_export(ethash_full_t full)
-{
-	return ethash_full_dag(full);
-}
-
-extern "C" MODULE_API uint64_t ethash_full_dag_size_export(ethash_full_t full)
-{
-	return ethash_full_dag_size(full);
-}
-
-extern "C" MODULE_API ethash_h256_t ethash_get_seedhash_export(uint64_t block_number)
-{
-	return ethash_get_seedhash(block_number);
-}
-
-extern "C" MODULE_API bool ethash_get_default_dirname_export(char *buf, size_t buf_size)
-{
-	return ethash_get_default_dirname(buf, buf_size);
+    return verifyEH_96_5(header, vecSolution, personalization);
 }
